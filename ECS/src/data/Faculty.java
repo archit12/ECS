@@ -15,10 +15,9 @@ public class Faculty implements Storable {
 	private long contact;
 	private String email;
 	private int duty_count = 0;
+	private Department department;
 //	public String[] designations = {"Professor", "Associate Professor", "Assistant Professor"};
-	
-	public Faculty() {
-	}
+	private static MysqlConnection connection = new MysqlConnection("root", "");
 
 	public void setId(int id) {
 		this.id = id;
@@ -67,7 +66,6 @@ public class Faculty implements Storable {
 		String query = "";
 		PreparedStatement pre_stmt = null;
 		try {
-			MysqlConnection connection = new MysqlConnection("root", "");
 			Connection conn = connection.getConnection();
 			query = "INSERT INTO faculties (`faculty name`, `designation`, `contact`, `email`) VALUES (?, ?, ?, ?)";
 			pre_stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
@@ -80,9 +78,11 @@ public class Faculty implements Storable {
 			rs.next();
 			this.setId(rs.getInt(1));
 			if(pre_stmt.getUpdateCount() > 0) {
+				conn.close();
 				return this.getId();
 			}
 			else {
+				conn.close();
 				return 0;
 			}
 		}
@@ -93,10 +93,15 @@ public class Faculty implements Storable {
 	}
 	
 	public static Faculty getFaculty(int id) {
-		String query = "SELECT `id`, `faculty name`, `designation`, `contact`, `email` FROM faculties WHERE id = ?";
+		String query = "SELECT `id`, `faculty name`, `designation`, `contact`, `email`, `duty_count`, `departments`.`dept_id`, `department_name`, `duty_count` "
+				+ "FROM `faculties` "
+				+ "inner join `faculty_department` "
+				+ "on `faculties`.`id` = `faculty_department`.`f_id`"
+				+ " inner join `departments` "
+				+ "on `departments`.`dept_id` = `faculty_department`.`dept_id` "
+				+ "WHERE id=?";
 		PreparedStatement pre_stmt = null;
 		try {
-			MysqlConnection connection = new MysqlConnection("root", "");
 			Connection conn = connection.getConnection();
 			pre_stmt = conn.prepareStatement(query);
 			pre_stmt.setInt(1, id);
@@ -104,10 +109,14 @@ public class Faculty implements Storable {
 			Faculty f = new Faculty();
 			rs.next();
 			f.setId(rs.getInt("id"));
-			f.setName(rs.getString("Name"));
+			f.setName(rs.getString("faculty name"));
 			f.setDesignation(rs.getString("designation"));
-			f.setContact(rs.getInt("contact"));
+			f.setContact(rs.getLong("contact"));
 			f.setEmail(rs.getString("email"));
+			f.setDutyCount(rs.getInt("duty_count"));
+			Department d = Department.get(rs.getInt("dept_id"));
+			f.setDepartment(d);
+			conn.close();
 			return f;
 		}
 		catch (Exception e) {
@@ -116,16 +125,22 @@ public class Faculty implements Storable {
 		}
 	}
 	
-	public void incrementDutyCount(Faculty f) {
-		String query = "UPDATE `faculties` SET `duty_count` = "+(f.getDutyCount()+1)+" WHERE `f_id` = "+f.getId();
+	public void incrementDutyCount() {
+		String query = "UPDATE `faculties` SET `duty_count` = "+(this.getDutyCount()+1)+" WHERE `id` = "+this.getId();
 		try {
-			MysqlConnection connection = new MysqlConnection("root", "");
 			Connection conn = connection.getConnection();
 			Statement stmt = conn.createStatement();
 			stmt.executeUpdate(query);
+			conn.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	public Department getDepartment() {
+		return department;
+	}
+	public void setDepartment(Department department) {
+		this.department = department;
 	}
 }
