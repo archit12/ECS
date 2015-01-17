@@ -20,11 +20,11 @@ import data.Faculty;
 import data.FacultyDepartment;
 import data.ExcelWriter;
 
-public class DutyAllocator {
+public class ExamDutyAllocator {
 	
 	private final int RESERVE_FACULTY_PERCENTAGE = 30;
 	private Date date;
-	private int faculties_per_room = 1;
+	private int faculties_per_room = 2;
 	private int no_of_rooms;
 	
 	public int getNoOfRooms() {
@@ -46,7 +46,7 @@ public class DutyAllocator {
 	
 	private static MysqlConnection connection = new MysqlConnection("root", "");
 	
-	public DutyAllocator(String date_string, int no_of_rooms) {
+	public ExamDutyAllocator(String date_string, int no_of_rooms) {
 		this.setDate(null);
 		this.setNoOfRooms(no_of_rooms);
 	}
@@ -212,6 +212,6 @@ public class DutyAllocator {
 	public boolean allocate() {
 		List<Faculty> shift1 = this.allocateDuty();
 		List<Faculty> shift2 = this.allocateDuty();
-		return new ExcelWriter().export(shift1, shift2);
+		return new ExcelWriter().export(shift1, shift2, no_of_rooms);
 	}
 }

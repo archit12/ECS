@@ -1,5 +1,5 @@
 package views;
-import dutyAllocator.DutyAllocator;
+import dutyAllocator.ExamDutyAllocator;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -73,7 +73,7 @@ public class FacultyDutyAllocationView extends JFrame {
 				} catch (NullPointerException e2) {
 					e2.printStackTrace();
 				}
-				DutyAllocator allocator = new DutyAllocator(date_string, room_count);
+				ExamDutyAllocator allocator = new ExamDutyAllocator(date_string, room_count);
 				if (allocator.allocate()) {
 					JOptionPane.showMessageDialog(contentPane, "All Duties Allocated");
 				} else {

@@ -26,7 +26,7 @@ public class ExcelReader {
 			XSSFSheet sheet = wb.getSheetAt(0);
 			Iterator rows = sheet.rowIterator();
 			while (rows.hasNext()) {
-				String[] faculty_details = new String[4];
+				String[] faculty_details = new String[5];
 				XSSFRow row = (XSSFRow) rows.next();
 				if(header_line) {
 					header_line = false;
@@ -67,8 +67,9 @@ public class ExcelReader {
 			f.setName(faculty[1]);
 			f.setDesignation(faculty[2]);
 			f.setEmail("");
+			f.setGender(faculty[3].charAt(0));
 			try {
-			f.setContact(Long.parseLong(faculty[3]));
+			f.setContact(Long.parseLong(faculty[4]));
 			}
 			catch(NumberFormatException e) {
 				f.setContact(0);

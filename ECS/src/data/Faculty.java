@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import connection.MysqlConnection;
 
@@ -15,6 +17,7 @@ public class Faculty implements Storable {
 	private long contact;
 	private String email;
 	private int duty_count = 0;
+	private char gender;
 	private Department department;
 //	public String[] designations = {"Professor", "Associate Professor", "Assistant Professor"};
 	private static MysqlConnection connection = new MysqlConnection("root", "");
@@ -60,19 +63,26 @@ public class Faculty implements Storable {
 	public void setDutyCount(int duty_count) {
 		this.duty_count = duty_count;
 	}
-
+	public char getGender() {
+		return this.gender;
+	}
+	public void setGender(char gender) {
+		this.gender = gender;
+	}
+	
 	@Override
 	public int store() {
 		String query = "";
 		PreparedStatement pre_stmt = null;
 		try {
 			Connection conn = connection.getConnection();
-			query = "INSERT INTO faculties (`faculty name`, `designation`, `contact`, `email`) VALUES (?, ?, ?, ?)";
+			query = "INSERT INTO faculties (`faculty name`, `designation`, `contact`, `email`, `gender`) VALUES (?, ?, ?, ?, ?)";
 			pre_stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
 			pre_stmt.setString(1, this.getName());
 			pre_stmt.setString(2, this.getDesignation());
 			pre_stmt.setLong(3, this.getContact());
 			pre_stmt.setString(4, this.getEmail());
+			pre_stmt.setString(5, String.valueOf(this.getGender()));
 			pre_stmt.execute();
 			ResultSet rs = pre_stmt.getGeneratedKeys();
 			rs.next();
@@ -93,7 +103,7 @@ public class Faculty implements Storable {
 	}
 	
 	public static Faculty getFaculty(int id) {
-		String query = "SELECT `id`, `faculty name`, `designation`, `contact`, `email`, `duty_count`, `departments`.`dept_id`, `department_name`, `duty_count` "
+		String query = "SELECT `id`, `faculty name`, `designation`, `contact`, `email`, `duty_count`, `gender`, `departments`.`dept_id`, `department_name`, `duty_count` "
 				+ "FROM `faculties` "
 				+ "inner join `faculty_department` "
 				+ "on `faculties`.`id` = `faculty_department`.`f_id`"
@@ -114,6 +124,7 @@ public class Faculty implements Storable {
 			f.setContact(rs.getLong("contact"));
 			f.setEmail(rs.getString("email"));
 			f.setDutyCount(rs.getInt("duty_count"));
+			f.setGender(rs.getString("gender").charAt(0));
 			Department d = Department.get(rs.getInt("dept_id"));
 			f.setDepartment(d);
 			conn.close();
@@ -122,6 +133,41 @@ public class Faculty implements Storable {
 		catch (Exception e) {
 			e.printStackTrace();
 			return new Faculty();
+		}
+	}
+	
+	public static List<Faculty> getFaculties() {
+		String query = "SELECT `id`, `faculty name`, `designation`, `contact`, `email`, `duty_count`, `gender`, `departments`.`dept_id`, `department_name`, `duty_count` "
+				+ "FROM `faculties` "
+				+ "inner join `faculty_department` "
+				+ "on `faculties`.`id` = `faculty_department`.`f_id`"
+				+ " inner join `departments` "
+				+ "on `departments`.`dept_id` = `faculty_department`.`dept_id` ";
+		Statement stmt = null;
+		List<Faculty> faculties = new ArrayList<Faculty>();
+		try {
+			Connection conn = connection.getConnection();
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			while(rs.next()) {
+				Faculty f = new Faculty();
+				f.setId(rs.getInt("id"));
+				f.setName(rs.getString("faculty name"));
+				f.setDesignation(rs.getString("designation"));
+				f.setContact(rs.getLong("contact"));
+				f.setEmail(rs.getString("email"));
+				f.setDutyCount(rs.getInt("duty_count"));
+				f.setGender(rs.getString("gender").charAt(0));
+				Department d = Department.get(rs.getInt("dept_id"));
+				f.setDepartment(d);
+				faculties.add(f);
+			}
+			conn.close();
+			return faculties;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return faculties;
 		}
 	}
 	
